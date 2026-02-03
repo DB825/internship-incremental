@@ -16,7 +16,7 @@ let semester = 1;
 // Start decent but not overpowered
 let energy = 60;
 let maxEnergy = 100;
-let energyRegen = 5; // fast regen for early loop [web:6]
+let energyRegen = 5; // per tick
 
 let skill = 10;
 let reputation = 2;
@@ -27,6 +27,22 @@ let gpa = 3.0;
 // upgrades
 let coffeeLevel = 0;
 let streakLevel = 0;
+
+// ---------- Sound ----------
+const clickSound = document.getElementById("sfx-click");
+const offerSound = document.getElementById("sfx-offer");
+
+function playClick() {
+  if (!clickSound) return;
+  clickSound.currentTime = 0;
+  clickSound.play();
+}
+
+function playOffer() {
+  if (!offerSound) return;
+  offerSound.currentTime = 0;
+  offerSound.play();
+}
 
 // ---------- DOM ----------
 const energySpan = document.getElementById("energy");
@@ -102,19 +118,21 @@ function tryProbability(chance) {
   return Math.random() < chance;
 }
 
-// ---------- Actions (buffed) ----------
+// ---------- Actions ----------
 function actionJoinClub() {
   const cost = 10;
   if (!spendEnergy(cost)) return;
-  gainSkill(3 + prestigeLevel);          // visible skill boost
-  gainReputation(0.8);                   // small but real rep
+  playClick();
+  gainSkill(3 + prestigeLevel);
+  gainReputation(0.8);
   log("You joined / helped with a club event. Small skill and rep boost.");
 }
 
 function actionStudy() {
   const cost = 15;
   if (!spendEnergy(cost)) return;
-  gainSkill(6 + prestigeLevel * 2);      // main skill source
+  playClick();
+  gainSkill(6 + prestigeLevel * 2);
   gpa = clamp(gpa + 0.05, 2.0, 4.0);
   log("You studied hard. Skill and GPA went up.");
 }
@@ -122,7 +140,8 @@ function actionStudy() {
 function actionBuildProject() {
   const cost = 25;
   if (!spendEnergy(cost)) return;
-  const baseStars = 1 + Math.floor(skill / 15); // scales quickly with skill
+  playClick();
+  const baseStars = 1 + Math.floor(skill / 15);
   gainStars(baseStars);
   gainSkill(4);
   gainReputation(2);
@@ -132,6 +151,7 @@ function actionBuildProject() {
 function actionApplyResearch() {
   const cost = 30;
   if (!spendEnergy(cost)) return;
+  playClick();
 
   const chance = clamp(0.25 + skill / 120 + (gpa - 3.0) * 0.3, 0.15, 0.95);
   if (tryProbability(chance)) {
@@ -147,8 +167,8 @@ function actionApplyResearch() {
 function actionApplyInternship() {
   const cost = 40;
   if (!spendEnergy(cost)) return;
+  playClick();
 
-  // tuned so first offer is gettable after a few loops of actions [web:128][web:2]
   const baseChance = 0.15 + skill / 180 + stars / 200;
   const tierBonus = prestigeLevel * 0.05;
   const chance = clamp(baseChance + tierBonus, 0.10, 0.9);
@@ -156,6 +176,7 @@ function actionApplyInternship() {
   if (tryProbability(chance)) {
     offers += 1;
     gainReputation(8);
+    playOffer();
     log("You got an internship offer!");
   } else {
     log("That internship application didn’t land. Try again after more skill/stars.");
@@ -180,6 +201,7 @@ function buyCoffee() {
   reputation -= cost;
   coffeeLevel += 1;
   energyRegen += 1.5;
+  playClick();
   log("Coffee habit upgraded. Energy regen increased.");
 }
 
@@ -191,6 +213,7 @@ function buyStreak() {
   }
   reputation -= cost;
   streakLevel += 1;
+  playClick();
   log("GitHub streak improved. Stars and rep generation are stronger.");
 }
 
@@ -204,10 +227,10 @@ function prestige() {
     log("Get at least 5 offers before prestiging to a higher tier.");
     return;
   }
+  playClick();
   prestigeLevel += 1;
   semester += 1;
 
-  // Soft reset but clearly better than a new player
   energy = 60;
   maxEnergy = 110 + prestigeLevel * 10;
   energyRegen = 5 + coffeeLevel;
@@ -215,7 +238,6 @@ function prestige() {
   stars = 0;
   offers = 0;
   gpa = 3.0;
-  // Reputation stays (it’s the meta resource), but tier multiplier grows.
 
   log("You moved up to " + currentTier().name + ". New semester, better baseline, higher expectations.");
 }
@@ -257,14 +279,11 @@ function render() {
 
 function gameTick() {
   tick += 1;
-
-  // passive gains each second so numbers always move [web:2][web:6]
   energy = clamp(energy + energyRegen, 0, maxEnergy);
   gainReputation(0.08);
   if (skill > 0) {
-    gainStars(0.02 + skill / 500); // tiny passive stars as “background commits”
+    gainStars(0.02 + skill / 500);
   }
-
   render();
 }
 
