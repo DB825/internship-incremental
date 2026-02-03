@@ -2,29 +2,29 @@
 let tick = 0;
 
 const tiers = [
-  { name: "Community College", repBoost: 1 },
-  { name: "State University", repBoost: 2 },
-  { name: "Top 50 University", repBoost: 4 },
-  { name: "Top 10 University", repBoost: 8 },
-  { name: "Graduate School", repBoost: 16 },
+  { name: "Carper Community College", repBoost: 1 },
+  { name: "Sally State University", repBoost: 2 },
+  { name: "Idyllic Institution", repBoost: 4 },
+  { name: "HYPSM", repBoost: 8 },
+  { name: "Grad School", repBoost: 16 },
   { name: "PhD Program", repBoost: 32 }
 ];
 
 let prestigeLevel = 0;
 let semester = 1;
 
-// Start decent but not overpowered
-let energy = 60;
+// Starting Stats
+let energy = 0;
 let maxEnergy = 100;
 let energyRegen = 5; // per tick
 
-let skill = 10;
-let reputation = 2;
+let skill = 5;
+let reputation = 1;
 let stars = 0;
 let offers = 0;
-let gpa = 3.0;
+let gpa = 1.0;
 
-// upgrades
+// Passive upgrades
 let coffeeLevel = 0;
 let streakLevel = 0;
 
