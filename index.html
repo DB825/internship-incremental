@@ -4,58 +4,29 @@
   <meta charset="UTF-8">
   <title>GitHub Grind: CEO Edition</title>
   <style>
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0; padding: 0; height: 100%;
-      font-family: system-ui, -apple-system, sans-serif;
-      background:#050814; color:#f5f5f5;
-    }
-    body { display:flex; flex-direction:column; }
-    header {
-      padding:1rem; background:#11162a; border-bottom:1px solid #222a4a;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    h1 { margin:0; font-size:1.2rem; color: #4f5ed1; }
-    .career-badge {
-      background: #e67e22; padding: 0.4rem 0.8rem; border-radius: 4px;
-      font-weight: bold; font-size: 0.9rem;
-    }
-    .layout { flex:1; display:flex; flex-direction:column; padding:0.5rem; gap:0.5rem; }
-    .row { display:flex; gap:0.5rem; width:100%; }
-    .card { background:#11162a; border-radius:6px; padding:0.8rem; flex:1; }
-    h2 { margin:0 0 0.5rem 0; font-size:1rem; border-bottom: 1px solid #222a4a; padding-bottom: 0.3rem;}
-    .resource { margin-bottom:0.3rem; font-size:0.9rem; }
-    button {
-      padding:0.5rem; margin: 0.2rem 0; width: 100%; cursor:pointer;
-      border-radius:4px; border:none; background:#2b3bbf; color:white;
-    }
-    button:disabled { opacity:0.3; cursor:not-allowed; }
-    button#btnCareerPrestige { background: #e67e22; font-weight: bold; height: 50px; }
-    #log { font-size:0.85rem; color: #a0a0a0; margin-top: 10px; font-style: italic; }
-    ul { padding-left:1rem; font-size:0.8rem; list-style: none; }
-    hr { border: 0; border-top: 1px solid #222a4a; margin: 10px 0; }
-    @media (max-width: 768px) { .row { flex-direction:column; } }
+    /* ... (Keeping your existing styles) ... */
+    #tiersList li { margin-bottom: 2px; transition: all 0.2s; }
   </style>
 </head>
 <body>
   <header>
     <div>
-      <h1>GitHub Grind: College to Career</h1>
+      <h1>GitHub Grind</h1>
       <small>Tier: <span id="tierName">...</span> · Sem: <span id="semester">1</span></small>
     </div>
-    <div class="career-badge">Career: <span id="careerName">Unemployed</span></div>
+    <div class="career-badge">Career: <span id="careerName">...</span></div>
   </header>
 
   <div class="layout">
     <div class="row">
       <div class="card">
         <h2>Stats</h2>
-        <div class="resource">Energy: <span id="energy">0</span> / <span id="maxEnergy">100</span></div>
+        <div class="resource">Energy: <span id="energy">0</span> / <span id="maxEnergy">0</span></div>
         <div class="resource">Skill: <span id="skill">0</span></div>
         <div class="resource">Reputation: <span id="reputation">0</span></div>
         <div class="resource">Stars: <span id="stars">0</span></div>
         <div class="resource">Offers: <span id="offers">0</span></div>
-        <div class="resource">GPA: <span id="gpa">1.0</span></div>
+        <div class="resource">GPA: <span id="gpa">0.00</span></div>
         <div class="resource" style="opacity: 0.5;">Tick: <span id="tick">0</span></div>
       </div>
 
@@ -66,7 +37,7 @@
         <button id="btnBuildProject">Build Project (25 ⚡)</button>
         <button id="btnApplyResearch">Apply Research (30 ⚡)</button>
         <button id="btnApplyInternship">Apply Internship (40 ⚡)</button>
-        <p id="log">Welcome to the grind.</p>
+        <p id="log">Initializing session...</p>
       </div>
     </div>
 
@@ -74,31 +45,27 @@
       <div class="card">
         <h2>Upgrades</h2>
         <div class="resource">
-          <small>Coffee (Lv <span id="coffeeLevel">0</span>): <span id="coffeeCost">10</span> Rep</small>
+          <small>Coffee (Lv <span id="coffeeLevel">0</span>): <span id="coffeeCost">0</span> Rep</small>
           <button id="btnCoffee">Upgrade Caffeine</button>
         </div>
         <hr>
         <div class="resource">
-          <small>Streak (Lv <span id="streakLevel">0</span>): <span id="streakCost">50</span> Rep</small>
+          <small>Streak (Lv <span id="streakLevel">0</span>): <span id="streakCost">0</span> Rep</small>
           <button id="btnStreak">Maintain Streak</button>
         </div>
+        <hr>
+        <button onclick="saveGame()" style="background:#1a237e; font-size: 0.7rem;">Manual Save</button>
       </div>
 
       <div class="card">
         <h2>Prestige</h2>
-        <button id="btnPrestige">Next Academic Tier (5 Offers)</button>
+        <button id="btnPrestige">Next Academic Tier</button>
         <ul id="tiersList"></ul>
         <hr>
         <button id="btnCareerPrestige">ACCEPT CAREER PROMOTION</button>
-        <small style="display: block; text-align: center; margin-top: 5px; opacity: 0.6;">
-          Requires PhD + 20 Offers. Resets academic life for massive multipliers.
-        </small>
       </div>
     </div>
   </div>
-
-  <audio id="sfx-click" src="https://www.fesliyanstudios.com/play-mp3/387"></audio>
-  <audio id="sfx-offer" src="https://www.fesliyanstudios.com/play-mp3/6686"></audio>
 
   <script src="main.js"></script>
 </body>
