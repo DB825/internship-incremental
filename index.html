@@ -4,67 +4,153 @@
   <meta charset="UTF-8">
   <title>GitHub Grind: College to Career</title>
   <style>
-    body { font-family: sans-serif; background:#050814; color:#f5f5f5; margin:0; }
-    header { padding:1rem; background:#11162a; }
-    h1 { margin:0 0 0.3rem 0; }
-    .container { padding:1rem; display:flex; flex-wrap:wrap; gap:1rem; }
-    .card { background:#151a33; padding:1rem; border-radius:8px; flex:1 1 280px; }
-    .resource { margin-bottom:0.3rem; }
-    button { padding:0.4rem 0.8rem; margin:0.2rem 0; cursor:pointer; }
-    button:disabled { opacity:0.5; cursor:not-allowed; }
-    ul { padding-left:1.1rem; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background:#050814;
+      color:#f5f5f5;
+    }
+    body {
+      display:flex;
+      flex-direction:column;
+    }
+    header {
+      padding:0.6rem 1rem;
+      background:#11162a;
+      border-bottom:1px solid #222a4a;
+    }
+    h1 {
+      margin:0 0 0.2rem 0;
+      font-size:1.2rem;
+    }
+    header div {
+      font-size:0.85rem;
+      opacity:0.9;
+    }
+    .layout {
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      padding:0.5rem;
+      gap:0.5rem;
+    }
+    .row {
+      display:flex;
+      gap:0.5rem;
+      width:100%;
+    }
+    .row > .card {
+      flex:1;
+    }
+    .card {
+      background:#11162a;
+      border-radius:6px;
+      padding:0.6rem 0.7rem;
+      font-size:0.9rem;
+      min-height:0;
+    }
+    .card h2 {
+      margin:0 0 0.3rem 0;
+      font-size:1rem;
+    }
+    .resource {
+      margin-bottom:0.2rem;
+      font-size:0.85rem;
+    }
+    button {
+      padding:0.3rem 0.6rem;
+      margin:0.15rem 0;
+      cursor:pointer;
+      font-size:0.85rem;
+      border-radius:4px;
+      border:none;
+      background:#2b3bbf;
+      color:#f5f5f5;
+    }
+    button:disabled {
+      opacity:0.4;
+      cursor:not-allowed;
+    }
+    #log {
+      margin-top:0.3rem;
+      font-size:0.8rem;
+      min-height:1.2rem;
+      opacity:0.9;
+    }
+    ul {
+      padding-left:1rem;
+      margin:0.3rem 0 0 0;
+      font-size:0.8rem;
+    }
+    li {
+      margin-bottom:0.1rem;
+    }
+
+    /* Stack on small screens */
+    @media (max-width: 768px) {
+      .row {
+        flex-direction:column;
+      }
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>GitHub Grind: College to Career</h1>
-    <div>School Tier: <span id="tierName">Community College</span> (Prestige: <span id="prestigeLevel">0</span>)</div>
-    <div>Run Semester: <span id="semester">1</span></div>
+    <div>School Tier: <span id="tierName">Community College</span> · Prestige: <span id="prestigeLevel">0</span> · Semester: <span id="semester">1</span></div>
   </header>
 
-  <div class="container">
-    <div class="card">
-      <h2>Stats</h2>
-      <div class="resource">Energy: <span id="energy">0</span> / <span id="maxEnergy">100</span></div>
-      <div class="resource">Skill: <span id="skill">0</span></div>
-      <div class="resource">Reputation: <span id="reputation">0</span></div>
-      <div class="resource">GitHub Stars: <span id="stars">0</span></div>
-      <div class="resource">Offers: <span id="offers">0</span></div>
-      <div class="resource">GPA: <span id="gpa">3.0</span></div>
-      <div class="resource">Tick: <span id="tick">0</span></div>
-    </div>
-
-    <div class="card">
-      <h2>Actions</h2>
-      <button id="btnJoinClub">Join Dev Club (Energy 10)</button><br>
-      <button id="btnStudy">Study Algorithms (Energy 15)</button><br>
-      <button id="btnBuildProject">Build GitHub Project (Energy 25)</button><br>
-      <button id="btnApplyResearch">Apply for Research (Energy 30)</button><br>
-      <button id="btnApplyInternship">Apply for Internship (Energy 40)</button>
-      <p id="log"></p>
-    </div>
-
-    <div class="card">
-      <h2>Passive Upgrades</h2>
-      <div>
-        Coffee Habit Lv <span id="coffeeLevel">0</span><br>
-        Cost: <span id="coffeeCost">10</span> Reputation<br>
-        <button id="btnCoffee">Buy (Energy regen boost)</button>
+  <div class="layout">
+    <div class="row">
+      <div class="card">
+        <h2>Stats</h2>
+        <div class="resource">Energy: <span id="energy">0</span> / <span id="maxEnergy">100</span></div>
+        <div class="resource">Skill: <span id="skill">0</span></div>
+        <div class="resource">Reputation: <span id="reputation">0</span></div>
+        <div class="resource">GitHub Stars: <span id="stars">0</span></div>
+        <div class="resource">Offers: <span id="offers">0</span></div>
+        <div class="resource">GPA: <span id="gpa">3.0</span></div>
+        <div class="resource">Tick: <span id="tick">0</span></div>
       </div>
-      <hr>
-      <div>
-        GitHub Streak Lv <span id="streakLevel">0</span><br>
-        Cost: <span id="streakCost">20</span> Reputation<br>
-        <button id="btnStreak">Buy (More stars & skill)</button>
+
+      <div class="card">
+        <h2>Actions</h2>
+        <button id="btnJoinClub">Join Dev Club (10 ⚡)</button><br>
+        <button id="btnStudy">Study Algorithms (15 ⚡)</button><br>
+        <button id="btnBuildProject">Build GitHub Project (25 ⚡)</button><br>
+        <button id="btnApplyResearch">Apply for Research (30 ⚡)</button><br>
+        <button id="btnApplyInternship">Apply for Internship (40 ⚡)</button>
+        <p id="log"></p>
       </div>
     </div>
 
-    <div class="card">
-      <h2>Prestige</h2>
-      <p>Reset your semester and jump to a stronger school tier.</p>
-      <p>Requirements: at least 5 offers.</p>
-      <button id="btnPrestige">Prestige (New Tier)</button>
-      <ul id="tiersList"></ul>
+    <div class="row">
+      <div class="card">
+        <h2>Passive Upgrades</h2>
+        <div>
+          Coffee Habit Lv <span id="coffeeLevel">0</span><br>
+          Cost: <span id="coffeeCost">10</span> Rep<br>
+          <button id="btnCoffee">Buy Coffee Habit</button>
+        </div>
+        <hr>
+        <div>
+          GitHub Streak Lv <span id="streakLevel">0</span><br>
+          Cost: <span id="streakCost">20</span> Rep<br>
+          <button id="btnStreak">Buy Streak</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Prestige</h2>
+        <p style="margin:0 0 0.3rem 0; font-size:0.85rem;">
+          Get at least 5 offers, then prestige to move to a higher tier school and keep long‑term bonuses.
+        </p>
+        <button id="btnPrestige">Prestige to Higher Tier</button>
+        <ul id="tiersList"></ul>
+      </div>
     </div>
   </div>
 

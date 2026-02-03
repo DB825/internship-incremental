@@ -13,15 +13,16 @@ const tiers = [
 let prestigeLevel = 0;
 let semester = 1;
 
-let energy = 50;
-let maxEnergy = 100;
-let energyRegen = 3; // per tick
+// better starting stats
+let energy = 80;
+let maxEnergy = 120;
+let energyRegen = 4; // per tick
 
-let skill = 0;
-let reputation = 0;
-let stars = 0;
+let skill = 20;
+let reputation = 5;
+let stars = 3;
 let offers = 0;
-let gpa = 3.0;
+let gpa = 3.2;
 
 // upgrades
 let coffeeLevel = 0;
@@ -44,7 +45,6 @@ const semesterSpan = document.getElementById("semester");
 const logP = document.getElementById("log");
 const tiersList = document.getElementById("tiersList");
 
-// buttons
 const btnJoinClub = document.getElementById("btnJoinClub");
 const btnStudy = document.getElementById("btnStudy");
 const btnBuildProject = document.getElementById("btnBuildProject");
@@ -80,7 +80,7 @@ function clamp(v, min, max) {
 // ---------- Actions ----------
 function spendEnergy(cost) {
   if (energy < cost) {
-    log("Too tired for that. Get some rest (wait a bit).");
+    log("Too tired for that. Wait a bit to recover energy.");
     return false;
   }
   energy -= cost;
@@ -103,66 +103,61 @@ function tryProbability(chance) {
   return Math.random() < chance;
 }
 
-// Join club: small skill/rep gain
 function actionJoinClub() {
   const cost = 10;
   if (!spendEnergy(cost)) return;
-  gainSkill(1 + prestigeLevel * 0.5);
-  gainReputation(0.5);
-  log("You joined / helped out with a dev club event.");
+  gainSkill(2 + prestigeLevel * 0.5);
+  gainReputation(0.7);
+  log("You attended a dev club meeting and met some people.");
 }
 
-// Study: bigger skill, slight GPA bump
 function actionStudy() {
   const cost = 15;
   if (!spendEnergy(cost)) return;
-  gainSkill(3 + prestigeLevel);
-  gpa = clamp(gpa + 0.02, 2.0, 4.0);
-  log("Grinding algorithms and homework. Skill and GPA improved.");
+  gainSkill(4 + prestigeLevel);
+  gpa = clamp(gpa + 0.03, 2.0, 4.0);
+  log("You studied algorithms; skill and GPA went up.");
 }
 
-// Build GitHub project: stars, rep, skill
 function actionBuildProject() {
   const cost = 25;
   if (!spendEnergy(cost)) return;
-  const baseStars = 1 + Math.floor(skill / 20);
+  const baseStars = 1 + Math.floor(skill / 25);
   gainStars(baseStars);
-  gainSkill(2);
+  gainSkill(3);
   gainReputation(1.5);
-  log("You pushed a new feature to your side project on GitHub.");
+  log("You shipped a small GitHub project.");
 }
 
-// Apply for research: chance improves with skill & GPA
 function actionApplyResearch() {
   const cost = 30;
   if (!spendEnergy(cost)) return;
 
-  const chance = clamp(0.1 + skill / 100 + (gpa - 3.0) * 0.2, 0.05, 0.9);
+  const chance = clamp(0.15 + skill / 100 + (gpa - 3.0) * 0.25, 0.08, 0.9);
   if (tryProbability(chance)) {
-    gainSkill(5);
-    gainReputation(4);
+    gainSkill(6);
+    gainReputation(4.5);
     gainStars(3);
-    log("You joined an undergraduate research project!");
+    log("You got into a research project!");
   } else {
-    log("Professor never replied to your research email... yet.");
+    log("No response from professors this time.");
   }
 }
 
-// Apply for internship: main “offer” generator
 function actionApplyInternship() {
   const cost = 40;
   if (!spendEnergy(cost)) return;
 
-  const baseChance = 0.05 + skill / 150 + stars / 200;
+  const baseChance = 0.08 + skill / 160 + stars / 220;
   const tierBonus = prestigeLevel * 0.03;
-  const chance = clamp(baseChance + tierBonus, 0.03, 0.85);
+  const chance = clamp(baseChance + tierBonus, 0.05, 0.85);
 
   if (tryProbability(chance)) {
     offers += 1;
-    gainReputation(6);
-    log("You got an internship offer!");
+    gainReputation(6.5);
+    log("You received an internship offer!");
   } else {
-    log("Your application was rejected or ghosted.");
+    log("That application didn’t work out.");
   }
 }
 
@@ -178,13 +173,13 @@ function streakCost(level) {
 function buyCoffee() {
   const cost = coffeeCost(coffeeLevel);
   if (reputation < cost) {
-    log("Not enough reputation to sustain that coffee habit.");
+    log("Not enough reputation to fuel that coffee habit.");
     return;
   }
   reputation -= cost;
   coffeeLevel += 1;
   energyRegen += 1;
-  log("Coffee habit upgraded. You regenerate energy faster.");
+  log("Coffee habit upgraded; energy regen increased.");
 }
 
 function buyStreak() {
@@ -195,7 +190,7 @@ function buyStreak() {
   }
   reputation -= cost;
   streakLevel += 1;
-  log("Your GitHub streak makes your projects look more impressive.");
+  log("Your GitHub streak boosts stars and reputation.");
 }
 
 // ---------- Prestige ----------
@@ -205,22 +200,21 @@ function canPrestige() {
 
 function prestige() {
   if (!canPrestige()) {
-    log("You need at least 5 offers to prestige to a higher tier.");
+    log("Need at least 5 offers to prestige.");
     return;
   }
   prestigeLevel += 1;
   semester += 1;
 
-  // soft reset
-  energy = 50;
-  maxEnergy = 100;
-  energyRegen = 3 + coffeeLevel; // upgrades carry over
-  skill = 0;
-  stars = 0;
+  energy = 80;
+  maxEnergy = 120;
+  energyRegen = 4 + coffeeLevel;
+  skill = 20;
+  stars = 3;
   offers = 0;
-  gpa = 3.0;
+  gpa = 3.2;
 
-  log("You moved up to " + currentTier().name + ". Everything feels harder, but the payoff is bigger.");
+  log("You moved up to " + currentTier().name + ", starting a new chapter.");
 }
 
 // ---------- Loop & Render ----------
@@ -243,16 +237,13 @@ function render() {
   streakLevelSpan.textContent = streakLevel;
   streakCostSpan.textContent = streakCost(streakLevel).toFixed(1);
 
-  // action button enable/disable based on energy
   btnJoinClub.disabled = energy < 10;
   btnStudy.disabled = energy < 15;
   btnBuildProject.disabled = energy < 25;
   btnApplyResearch.disabled = energy < 30;
   btnApplyInternship.disabled = energy < 40;
-
   btnPrestige.disabled = !canPrestige();
 
-  // tiers list
   tiersList.innerHTML = "";
   tiers.forEach((t, i) => {
     const li = document.createElement("li");
@@ -263,13 +254,8 @@ function render() {
 
 function gameTick() {
   tick += 1;
-
-  // regen energy, slightly boosted by coffee
   energy = clamp(energy + energyRegen, 0, maxEnergy);
-
-  // passive reputation from being enrolled at current tier
-  gainReputation(0.05);
-
+  gainReputation(0.06);
   render();
 }
 
@@ -286,7 +272,7 @@ btnStreak.addEventListener("click", buyStreak);
 
 // initial
 render();
-log("Welcome! Start by joining clubs and studying. Build projects, then chase research and internships.");
+log("You start with some experience: join clubs, study, build projects, then chase research and internships.");
 
-// 1-second tick, typical idle cadence [web:8][web:29]
+// typical idle 1-second loop [web:8][web:29]
 setInterval(gameTick, 1000);
