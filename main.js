@@ -29,12 +29,12 @@ let careerLevel = 0;
 let semester = 1;
 
 // Starting Stats
-let energy = 0;
+let energy = 100;
 let maxEnergy = 100;
 let energyRegen = 5;
 
 let skill = 5;
-let reputation = 1;
+let reputation = 0;
 let stars = 0;
 let offers = 0;
 let gpa = 1.0;
@@ -70,7 +70,6 @@ const gpaSpan = document.getElementById("gpa");
 const tickSpan = document.getElementById("tick");
 
 const tierNameSpan = document.getElementById("tierName");
-const prestigeLevelSpan = document.getElementById("prestigeLevel");
 const semesterSpan = document.getElementById("semester");
 const careerNameSpan = document.getElementById("careerName");
 
@@ -107,7 +106,6 @@ function currentCareer() {
 }
 
 function totalRepMultiplier() {
-  // Combines Academic tier (linear-ish) with Career tier (exponential)
   return currentTier().repBoost * currentCareer().boost * (1 + streakLevel * 0.2);
 }
 
@@ -147,6 +145,7 @@ function actionJoinClub() {
   gainSkill(3 + prestigeLevel);
   gainReputation(0.8);
   log("Joined a club. Skill and reputation gained.");
+  render();
 }
 
 function actionStudy() {
@@ -155,6 +154,7 @@ function actionStudy() {
   gainSkill(6 + prestigeLevel * 2);
   gpa = clamp(gpa + 0.05, 2.0, 4.0);
   log("Studied hard. GPA and skill increased.");
+  render();
 }
 
 function actionBuildProject() {
@@ -165,6 +165,7 @@ function actionBuildProject() {
   gainSkill(4);
   gainReputation(2);
   log("Shipped a project. Stars and rep up.");
+  render();
 }
 
 function actionApplyResearch() {
@@ -179,6 +180,7 @@ function actionApplyResearch() {
   } else {
     log("Ghosted by the professor.");
   }
+  render();
 }
 
 function actionApplyInternship() {
@@ -194,53 +196,59 @@ function actionApplyInternship() {
   } else {
     log("Rejected. Keep grinding.");
   }
+  render();
 }
 
 // ---------- Upgrades ----------
-function coffeeCost(level) { return 8 * Math.pow(1.5, level); }
-function streakCost(level) { return 15 * Math.pow(1.6, level); }
+function getCoffeeCost() { return Math.floor(10 * Math.pow(1.5, coffeeLevel)); }
+function getStreakCost() { return Math.floor(50 * Math.pow(1.6, streakLevel)); }
 
 function buyCoffee() {
-  const cost = coffeeCost(coffeeLevel);
-  if (reputation < cost) return;
-  reputation -= cost;
-  coffeeLevel++;
-  energyRegen += 1.5;
-  playClick();
+  const cost = getCoffeeCost();
+  if (reputation >= cost) {
+    reputation -= cost;
+    coffeeLevel++;
+    energyRegen += 1.5; // Passive boost
+    playClick();
+    log("Bought coffee! Energy regen increased.");
+    render();
+  } else {
+    log("Not enough Reputation for coffee.");
+  }
 }
 
 function buyStreak() {
-  const cost = streakCost(streakLevel);
-  if (reputation < cost) return;
-  reputation -= cost;
-  streakLevel++;
-  playClick();
+  const cost = getStreakCost();
+  if (reputation >= cost) {
+    reputation -= cost;
+    streakLevel++;
+    playClick();
+    log("Maintaining the streak! Multipliers increased.");
+    render();
+  } else {
+    log("Not enough Reputation to maintain streak.");
+  }
 }
 
-// ---------- Prestige Layer 1: Academic ----------
-function canPrestige() {
-  return offers >= 5;
-}
+// ---------- Prestige ----------
+function canPrestige() { return offers >= 5; }
 
 function prestige() {
   if (!canPrestige()) return;
   playClick();
   prestigeLevel++;
   semester++;
-
-  // Partial reset
-  energy = 60;
-  maxEnergy = 110 + (prestigeLevel * 10);
-  skill = 12 + (prestigeLevel * 3);
+  energy = 100;
+  maxEnergy = 100 + (prestigeLevel * 10);
+  skill = 5 + (prestigeLevel * 5);
   stars = 0;
   offers = 0;
   gpa = 3.0;
-  log("Moved to " + currentTier().name + ".");
+  log("Moved to " + currentTier().name + "!");
+  render();
 }
 
-// ---------- Prestige Layer 2: Career ----------
 function canCareerPrestige() {
-  // Can only career-prestige if you've hit the final academic tier and have 20+ offers
   return prestigeLevel >= tiers.length - 1 && offers >= 20;
 }
 
@@ -248,22 +256,20 @@ function careerPrestige() {
   if (!canCareerPrestige()) return;
   playOffer();
   careerLevel++;
-  
-  // Hard reset of Academic progress
   prestigeLevel = 0;
   semester = 1;
   energy = 100;
   maxEnergy = 100 + (careerLevel * 50);
   energyRegen = 5 + (careerLevel * 2);
   skill = 5 + (careerLevel * 10);
-  reputation = 1;
+  reputation = 0;
   stars = 0;
   offers = 0;
   gpa = 1.0;
   coffeeLevel = 0;
   streakLevel = 0;
-
-  log("TRANSITIONED TO CAREER: " + currentCareer().name);
+  log("CAREER UNLOCKED: " + currentCareer().name);
+  render();
 }
 
 // ---------- Loop ----------
@@ -271,30 +277,30 @@ function render() {
   energySpan.textContent = Math.floor(energy);
   maxEnergySpan.textContent = maxEnergy;
   skillSpan.textContent = skill.toFixed(1);
-  reputationSpan.textContent = reputation.toLocaleString(undefined, {maximumFractionDigits: 1});
+  reputationSpan.textContent = Math.floor(reputation).toLocaleString();
   starsSpan.textContent = Math.floor(stars);
   offersSpan.textContent = offers;
   gpaSpan.textContent = gpa.toFixed(2);
   tickSpan.textContent = tick;
 
   tierNameSpan.textContent = currentTier().name;
-  prestigeLevelSpan.textContent = prestigeLevel;
   semesterSpan.textContent = semester;
   careerNameSpan.textContent = currentCareer().name;
 
   coffeeLevelSpan.textContent = coffeeLevel;
-  coffeeCostSpan.textContent = coffeeCost(coffeeLevel).toLocaleString(undefined, {maximumFractionDigits: 1});
+  coffeeCostSpan.textContent = getCoffeeCost();
   streakLevelSpan.textContent = streakLevel;
-  streakCostSpan.textContent = streakCost(streakLevel).toLocaleString(undefined, {maximumFractionDigits: 1});
+  streakCostSpan.textContent = getStreakCost();
 
   btnPrestige.disabled = !canPrestige();
   btnCareerPrestige.disabled = !canCareerPrestige();
   
-  // Visual list update
+  // Tiers List
   tiersList.innerHTML = "";
   tiers.forEach((t, i) => {
     const li = document.createElement("li");
-    li.style.opacity = i > prestigeLevel ? "0.5" : "1";
+    li.style.opacity = i > prestigeLevel ? "0.4" : "1";
+    li.style.fontWeight = i === prestigeLevel ? "bold" : "normal";
     li.textContent = (i === prestigeLevel ? "▶ " : "") + t.name + " (x" + t.repBoost + ")";
     tiersList.appendChild(li);
   });
@@ -303,8 +309,7 @@ function render() {
 function gameTick() {
   tick++;
   energy = clamp(energy + energyRegen, 0, maxEnergy);
-  gainReputation(0.08);
-  if (skill > 0) gainStars(0.02 + skill / 500);
+  gainReputation(0.1); // Base passive reputation
   render();
 }
 
