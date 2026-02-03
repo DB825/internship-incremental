@@ -10,13 +10,28 @@ const tiers = [
   { name: "PhD Program", repBoost: 32 }
 ];
 
+const careers = [
+  { name: "Unemployed Graduate", boost: 1 },
+  { name: "McDonald's Crew", boost: 10 },
+  { name: "Walmart Associate", boost: 100 },
+  { name: "Accountant", boost: 1000 },
+  { name: "Supply Chain Manager", boost: 10000 },
+  { name: "Software Engineer", boost: 100000 },
+  { name: "Quant Researcher", boost: 1e6 },
+  { name: "YC Investor", boost: 1e7 },
+  { name: "Unicorn CEO", boost: 1e8 },
+  { name: "Hedge Fund Manager", boost: 1e9 },
+  { name: "Monopoly Owner", boost: 1e12 }
+];
+
 let prestigeLevel = 0;
+let careerLevel = 0;
 let semester = 1;
 
 // Starting Stats
 let energy = 0;
 let maxEnergy = 100;
-let energyRegen = 5; // per tick
+let energyRegen = 5;
 
 let skill = 5;
 let reputation = 1;
@@ -24,7 +39,7 @@ let stars = 0;
 let offers = 0;
 let gpa = 1.0;
 
-// Passive upgrades
+// Upgrades
 let coffeeLevel = 0;
 let streakLevel = 0;
 
@@ -57,6 +72,7 @@ const tickSpan = document.getElementById("tick");
 const tierNameSpan = document.getElementById("tierName");
 const prestigeLevelSpan = document.getElementById("prestigeLevel");
 const semesterSpan = document.getElementById("semester");
+const careerNameSpan = document.getElementById("careerName");
 
 const logP = document.getElementById("log");
 const tiersList = document.getElementById("tiersList");
@@ -67,6 +83,7 @@ const btnBuildProject = document.getElementById("btnBuildProject");
 const btnApplyResearch = document.getElementById("btnApplyResearch");
 const btnApplyInternship = document.getElementById("btnApplyInternship");
 const btnPrestige = document.getElementById("btnPrestige");
+const btnCareerPrestige = document.getElementById("btnCareerPrestige");
 
 const coffeeLevelSpan = document.getElementById("coffeeLevel");
 const coffeeCostSpan = document.getElementById("coffeeCost");
@@ -85,8 +102,13 @@ function currentTier() {
   return tiers[Math.min(prestigeLevel, tiers.length - 1)];
 }
 
+function currentCareer() {
+  return careers[Math.min(careerLevel, careers.length - 1)];
+}
+
 function totalRepMultiplier() {
-  return currentTier().repBoost * (1 + streakLevel * 0.2);
+  // Combines Academic tier (linear-ish) with Career tier (exponential)
+  return currentTier().repBoost * currentCareer().boost * (1 + streakLevel * 0.2);
 }
 
 function clamp(v, min, max) {
@@ -95,7 +117,7 @@ function clamp(v, min, max) {
 
 function spendEnergy(cost) {
   if (energy < cost) {
-    log("Too tired. Wait a few seconds to recover energy.");
+    log("Too tired. Wait a few seconds.");
     return false;
   }
   energy -= cost;
@@ -120,134 +142,136 @@ function tryProbability(chance) {
 
 // ---------- Actions ----------
 function actionJoinClub() {
-  const cost = 10;
-  if (!spendEnergy(cost)) return;
+  if (!spendEnergy(10)) return;
   playClick();
   gainSkill(3 + prestigeLevel);
   gainReputation(0.8);
-  log("You joined / helped with a club event. Small skill and rep boost.");
+  log("Joined a club. Skill and reputation gained.");
 }
 
 function actionStudy() {
-  const cost = 15;
-  if (!spendEnergy(cost)) return;
+  if (!spendEnergy(15)) return;
   playClick();
   gainSkill(6 + prestigeLevel * 2);
   gpa = clamp(gpa + 0.05, 2.0, 4.0);
-  log("You studied hard. Skill and GPA went up.");
+  log("Studied hard. GPA and skill increased.");
 }
 
 function actionBuildProject() {
-  const cost = 25;
-  if (!spendEnergy(cost)) return;
+  if (!spendEnergy(25)) return;
   playClick();
   const baseStars = 1 + Math.floor(skill / 15);
   gainStars(baseStars);
   gainSkill(4);
   gainReputation(2);
-  log("You shipped a GitHub project. Stars and rep increased.");
+  log("Shipped a project. Stars and rep up.");
 }
 
 function actionApplyResearch() {
-  const cost = 30;
-  if (!spendEnergy(cost)) return;
+  if (!spendEnergy(30)) return;
   playClick();
-
   const chance = clamp(0.25 + skill / 120 + (gpa - 3.0) * 0.3, 0.15, 0.95);
   if (tryProbability(chance)) {
     gainSkill(10);
     gainReputation(6);
     gainStars(4);
-    log("You joined a research project! Big boost to skill, rep, and stars.");
+    log("Research position secured!");
   } else {
-    log("Professors didn’t respond this time.");
+    log("Ghosted by the professor.");
   }
 }
 
 function actionApplyInternship() {
-  const cost = 40;
-  if (!spendEnergy(cost)) return;
+  if (!spendEnergy(40)) return;
   playClick();
-
   const baseChance = 0.15 + skill / 180 + stars / 200;
-  const tierBonus = prestigeLevel * 0.05;
-  const chance = clamp(baseChance + tierBonus, 0.10, 0.9);
-
+  const chance = clamp(baseChance + (prestigeLevel * 0.05), 0.10, 0.9);
   if (tryProbability(chance)) {
     offers += 1;
     gainReputation(8);
     playOffer();
-    log("You got an internship offer!");
+    log("Internship offer received!");
   } else {
-    log("That internship application didn’t land. Try again after more skill/stars.");
+    log("Rejected. Keep grinding.");
   }
 }
 
 // ---------- Upgrades ----------
-function coffeeCost(level) {
-  return 8 * Math.pow(1.5, level);
-}
-
-function streakCost(level) {
-  return 15 * Math.pow(1.6, level);
-}
+function coffeeCost(level) { return 8 * Math.pow(1.5, level); }
+function streakCost(level) { return 15 * Math.pow(1.6, level); }
 
 function buyCoffee() {
   const cost = coffeeCost(coffeeLevel);
-  if (reputation < cost) {
-    log("Not enough reputation for a bigger coffee habit.");
-    return;
-  }
+  if (reputation < cost) return;
   reputation -= cost;
-  coffeeLevel += 1;
+  coffeeLevel++;
   energyRegen += 1.5;
   playClick();
-  log("Coffee habit upgraded. Energy regen increased.");
 }
 
 function buyStreak() {
   const cost = streakCost(streakLevel);
-  if (reputation < cost) {
-    log("Not enough reputation to maintain that GitHub streak.");
-    return;
-  }
+  if (reputation < cost) return;
   reputation -= cost;
-  streakLevel += 1;
+  streakLevel++;
   playClick();
-  log("GitHub streak improved. Stars and rep generation are stronger.");
 }
 
-// ---------- Prestige ----------
+// ---------- Prestige Layer 1: Academic ----------
 function canPrestige() {
   return offers >= 5;
 }
 
 function prestige() {
-  if (!canPrestige()) {
-    log("Get at least 5 offers before prestiging to a higher tier.");
-    return;
-  }
+  if (!canPrestige()) return;
   playClick();
-  prestigeLevel += 1;
-  semester += 1;
+  prestigeLevel++;
+  semester++;
 
+  // Partial reset
   energy = 60;
-  maxEnergy = 110 + prestigeLevel * 10;
-  energyRegen = 5 + coffeeLevel;
-  skill = 12 + prestigeLevel * 3;
+  maxEnergy = 110 + (prestigeLevel * 10);
+  skill = 12 + (prestigeLevel * 3);
   stars = 0;
   offers = 0;
   gpa = 3.0;
-
-  log("You moved up to " + currentTier().name + ". New semester, better baseline, higher expectations.");
+  log("Moved to " + currentTier().name + ".");
 }
 
-// ---------- Loop & Render ----------
+// ---------- Prestige Layer 2: Career ----------
+function canCareerPrestige() {
+  // Can only career-prestige if you've hit the final academic tier and have 20+ offers
+  return prestigeLevel >= tiers.length - 1 && offers >= 20;
+}
+
+function careerPrestige() {
+  if (!canCareerPrestige()) return;
+  playOffer();
+  careerLevel++;
+  
+  // Hard reset of Academic progress
+  prestigeLevel = 0;
+  semester = 1;
+  energy = 100;
+  maxEnergy = 100 + (careerLevel * 50);
+  energyRegen = 5 + (careerLevel * 2);
+  skill = 5 + (careerLevel * 10);
+  reputation = 1;
+  stars = 0;
+  offers = 0;
+  gpa = 1.0;
+  coffeeLevel = 0;
+  streakLevel = 0;
+
+  log("TRANSITIONED TO CAREER: " + currentCareer().name);
+}
+
+// ---------- Loop ----------
 function render() {
   energySpan.textContent = Math.floor(energy);
   maxEnergySpan.textContent = maxEnergy;
   skillSpan.textContent = skill.toFixed(1);
-  reputationSpan.textContent = reputation.toFixed(1);
+  reputationSpan.textContent = reputation.toLocaleString(undefined, {maximumFractionDigits: 1});
   starsSpan.textContent = Math.floor(stars);
   offersSpan.textContent = offers;
   gpaSpan.textContent = gpa.toFixed(2);
@@ -256,51 +280,43 @@ function render() {
   tierNameSpan.textContent = currentTier().name;
   prestigeLevelSpan.textContent = prestigeLevel;
   semesterSpan.textContent = semester;
+  careerNameSpan.textContent = currentCareer().name;
 
   coffeeLevelSpan.textContent = coffeeLevel;
-  coffeeCostSpan.textContent = coffeeCost(coffeeLevel).toFixed(1);
+  coffeeCostSpan.textContent = coffeeCost(coffeeLevel).toLocaleString(undefined, {maximumFractionDigits: 1});
   streakLevelSpan.textContent = streakLevel;
-  streakCostSpan.textContent = streakCost(streakLevel).toFixed(1);
+  streakCostSpan.textContent = streakCost(streakLevel).toLocaleString(undefined, {maximumFractionDigits: 1});
 
-  btnJoinClub.disabled = energy < 10;
-  btnStudy.disabled = energy < 15;
-  btnBuildProject.disabled = energy < 25;
-  btnApplyResearch.disabled = energy < 30;
-  btnApplyInternship.disabled = energy < 40;
   btnPrestige.disabled = !canPrestige();
-
+  btnCareerPrestige.disabled = !canCareerPrestige();
+  
+  // Visual list update
   tiersList.innerHTML = "";
   tiers.forEach((t, i) => {
     const li = document.createElement("li");
-    li.textContent = (i === prestigeLevel ? "▶ " : "") + t.name + " (x" + t.repBoost + " rep)";
+    li.style.opacity = i > prestigeLevel ? "0.5" : "1";
+    li.textContent = (i === prestigeLevel ? "▶ " : "") + t.name + " (x" + t.repBoost + ")";
     tiersList.appendChild(li);
   });
 }
 
 function gameTick() {
-  tick += 1;
+  tick++;
   energy = clamp(energy + energyRegen, 0, maxEnergy);
   gainReputation(0.08);
-  if (skill > 0) {
-    gainStars(0.02 + skill / 500);
-  }
+  if (skill > 0) gainStars(0.02 + skill / 500);
   render();
 }
 
-// ---------- Events ----------
 btnJoinClub.addEventListener("click", actionJoinClub);
 btnStudy.addEventListener("click", actionStudy);
 btnBuildProject.addEventListener("click", actionBuildProject);
 btnApplyResearch.addEventListener("click", actionApplyResearch);
 btnApplyInternship.addEventListener("click", actionApplyInternship);
 btnPrestige.addEventListener("click", prestige);
-
+btnCareerPrestige.addEventListener("click", careerPrestige);
 btnCoffee.addEventListener("click", buyCoffee);
 btnStreak.addEventListener("click", buyStreak);
 
-// initial
-render();
-log("Join clubs, study, and build projects to raise skill/stars, then apply for research and internships.");
-
-// 1-second idle loop [web:18][web:2]
 setInterval(gameTick, 1000);
+render();
